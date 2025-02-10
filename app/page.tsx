@@ -752,13 +752,7 @@ export default function Home() {
 
               {/* Button below the pricing cards to open the trial modal */}
               <div className="mt-8 flex justify-center">
-                <Button
-                  size="lg"
-                  onClick={() => setIsModalOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
-                >
-                  Δοκιμάστε Δωρεάν
-                </Button>
+                
               </div>
             </div>
           </section>
