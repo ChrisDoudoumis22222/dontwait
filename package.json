@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "postinstall": "node -e \"require('os').platform().includes('win') ? require('child_process').execSync('npm install @next/swc-win32-x64-msvc', {stdio: 'inherit'}) : require('child_process').execSync('npm install @next/swc-linux-x64-gnu', {stdio: 'inherit'})\""
+    "lint": "next lint"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
@@ -15,7 +14,6 @@
     "@hookform/resolvers": "^3.9.1",
     "@lottiefiles/dotlottie-react": "^0.13.0",
     "@lottiefiles/react-lottie-player": "^3.6.0",
-    "@next/swc-linux-x64-gnu": "^15.1.7",
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.4",
     "@radix-ui/react-aspect-ratio": "^1.1.1",
