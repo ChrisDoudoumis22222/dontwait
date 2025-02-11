@@ -1,9 +1,17 @@
 "use client";
 
-import React, { Fragment, useState } from "react";
-import { Popover, Transition, Dialog } from "@headlessui/react";
+import React, { Fragment, useState, useEffect } from "react";
+import {
+  Popover,
+  Transition,
+  Dialog,
+} from "@headlessui/react";
 import { Link as ScrollLink, Element } from "react-scroll";
 import { motion } from "framer-motion";
+import Image from "next/image";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { supabase } from "@/lib/supabase";
+
 import {
   Menu as MenuIcon,
   X as CloseX,
@@ -28,24 +36,85 @@ import {
   PlayCircle,
   Settings,
   MessageCircle,
-  // Removed unused: ShieldAlert
 } from "lucide-react";
-import Image from "next/image";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
-// ---------------------------------------------
-// Import your custom components
-// ---------------------------------------------
+// ------------------------------
+// Custom Components Imports
+// ------------------------------
+import { PlanSelectionForm } from "@/components/ui/plan-selection-form";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/progress-bar";
-import { FloatingActionButton } from "@/components/floating-action-button";
 import { FeatureCard } from "@/components/feature-card";
-import { PricingCard } from "@/components/pricing-card";
+// Use default import for PricingCard:
+import PricingCard from "@/components/pricing-card";
+import { FloatingActionButton } from "@/components/floating-action-button";
 import { ChatWidget } from "@/components/chat-widget";
-// Removed unused import: AnimatedCounter
 
 // ---------------------------------------------
-// Constants / Data
+// Define a local interface for pricing plans
+// (Ensure that your PricingCard component's props match these properties)
+interface PricingPlan {
+  name: string;
+  price: string;
+  features: string[];
+  icon: React.ForwardRefExoticComponent<
+    React.RefAttributes<SVGSVGElement> & { [key: string]: any }
+  >;
+  highlighted?: boolean;
+}
+
+// ---------------------------------------------
+// EmailsList Component
+// ---------------------------------------------
+function EmailsList() {
+  const [emails, setEmails] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchEmails() {
+      const { data, error } = await supabase.from("emails").select("*");
+      if (error) {
+        console.error("Error fetching emails:", error);
+      } else {
+        setEmails(data);
+      }
+      setLoading(false);
+    }
+    fetchEmails();
+  }, []);
+
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Emails List</h1>
+      {loading ? (
+        <p>Loading emails...</p>
+      ) : (
+        <ul className="border rounded p-4">
+          {emails.length === 0 ? (
+            <p>No emails found.</p>
+          ) : (
+            emails.map((email) => (
+              <li key={email.id} className="border-b py-2">
+                <p>
+                  <strong>Name:</strong> {email.name}
+                </p>
+                <p>
+                  <strong>Email:</strong> {email.email}
+                </p>
+                <p>
+                  <strong>Subject:</strong> {email.subject}
+                </p>
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------
+// Constants / Data Arrays
 // ---------------------------------------------
 const NAV_ITEMS = [
   { label: "Πώς Λειτουργεί", icon: PlayCircle },
@@ -113,7 +182,7 @@ const FEATURES = [
   },
 ];
 
-const PRICING_PLANS = [
+const PRICING_PLANS: PricingPlan[] = [
   {
     name: "Basic",
     price: "€100",
@@ -196,13 +265,15 @@ function Wave({
 // ---------------------------------------------
 // Trial Modal Component
 // ---------------------------------------------
-// (Added type annotations for props and event handlers)
 interface TrialModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 function TrialModal({ isOpen, onClose }: TrialModalProps) {
+  // Workaround: assign the overlay from Dialog as any
+  const DialogOverlay = (Dialog as any).Overlay;
+
   const [formData, setFormData] = useState({
     email: "",
     name: "",
@@ -219,7 +290,6 @@ function TrialModal({ isOpen, onClose }: TrialModalProps) {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Handle form submission logic (e.g., API call)
     console.log("Form Data Submitted:", formData);
     onClose();
   };
@@ -241,7 +311,8 @@ function TrialModal({ isOpen, onClose }: TrialModalProps) {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
+            {/* Use our locally defined DialogOverlay */}
+            <DialogOverlay className="fixed inset-0 bg-black opacity-30" />
           </Transition.Child>
 
           {/* Centering trick */}
@@ -357,13 +428,17 @@ function TrialModal({ isOpen, onClose }: TrialModalProps) {
 }
 
 // ---------------------------------------------
-// HEADER
+// HEADER Component
 // ---------------------------------------------
-function Header() {
+interface HeaderProps {
+  onTrialOpen: () => void;
+}
+
+function Header({ onTrialOpen }: HeaderProps) {
   return (
     <Popover className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-white via-blue-50 to-white border-b border-blue-100 shadow-md backdrop-blur-sm">
       <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-        {/* Brand / Logo (Image) */}
+        {/* Brand / Logo */}
         <div className="flex-shrink-0">
           <Image
             src="https://i.ibb.co/DPmSsDrN/2025-02-10-203844.png"
@@ -395,7 +470,7 @@ function Header() {
         {/* CTA Button (Desktop) */}
         <div className="hidden md:block">
           <Button
-            onClick={() => {}}
+            onClick={onTrialOpen}
             className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"
           >
             Δοκιμάστε Δωρεάν
@@ -431,7 +506,8 @@ function Header() {
                 duration={500}
                 className="block w-full text-gray-700 hover:text-blue-600 text-lg font-medium transition-colors flex items-center"
                 onClick={() => {
-                  document.activeElement?.blur();
+                  // Cast activeElement to HTMLElement so that TypeScript recognizes the blur() method.
+                  (document.activeElement as HTMLElement)?.blur();
                 }}
               >
                 {Icon && <Icon className="mr-2 h-5 w-5" />}
@@ -440,7 +516,10 @@ function Header() {
             ))}
 
             <div className="pt-4">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-md">
+              <Button
+                onClick={onTrialOpen}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+              >
                 Δοκιμάστε Δωρεάν
               </Button>
             </div>
@@ -452,12 +531,12 @@ function Header() {
 }
 
 // ---------------------------------------------
-// FOOTER (Minimal with graphics)
+// FOOTER Component
 // ---------------------------------------------
 function Footer() {
   return (
     <footer className="relative bg-gradient-to-br from-blue-800 to-gray-900 text-white py-12">
-      {/* Decorative SVG Wave at the Top */}
+      {/* Decorative SVG Wave */}
       <div className="absolute inset-x-0 top-0 -mt-1 overflow-hidden leading-none">
         <svg
           className="w-full h-12"
@@ -540,7 +619,16 @@ function Footer() {
 // MAIN HOME COMPONENT (Default Export)
 // ---------------------------------------------
 export default function Home() {
+  // State for trial modal
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // State for plan selection modal
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("");
+
+  const handlePlanSelection = (planName: string) => {
+    setSelectedPlan(planName);
+    setIsPlanModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white text-gray-900 font-sans">
@@ -548,10 +636,17 @@ export default function Home() {
       <ProgressBar />
 
       {/* Header */}
-      <Header />
+      <Header onTrialOpen={() => setIsModalOpen(true)} />
 
       {/* Trial Modal */}
       <TrialModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+
+      {/* Plan Selection Form Modal */}
+      <PlanSelectionForm
+        isOpen={isPlanModalOpen}
+        onClose={() => setIsPlanModalOpen(false)}
+        selectedPlan={selectedPlan}
+      />
 
       {/* Main Content */}
       <main className="pt-20">
@@ -559,7 +654,6 @@ export default function Home() {
         <Element name="Hero">
           <section className="relative isolate overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100">
             <Wave position="bottom" />
-
             <div className="mx-auto max-w-7xl px-6 py-32 md:py-40 lg:py-48">
               <div className="flex flex-col lg:flex-row items-center gap-12">
                 {/* Left Content */}
@@ -578,7 +672,6 @@ export default function Home() {
                     <strong>επαγγελματική σελίδα κρατήσεων</strong>, αυτοματοποιήστε
                     ραντεβού και ενισχύστε την επιχείρησή σας.
                   </p>
-                  {/* Button opens the trial modal */}
                   <Button
                     size="lg"
                     onClick={() => setIsModalOpen(true)}
@@ -612,7 +705,6 @@ export default function Home() {
           <section className="relative isolate overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 py-32">
             <Wave position="top" />
             <Wave position="bottom" />
-
             <div className="container mx-auto px-4 relative z-10">
               <motion.h2
                 className="text-4xl font-bold text-center mb-16 text-gray-900"
@@ -623,7 +715,6 @@ export default function Home() {
               >
                 Πώς Λειτουργεί
               </motion.h2>
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                 {HOW_IT_WORKS_STEPS.map((step, index) => (
                   <FeatureCard key={index} {...step} index={index} />
@@ -638,7 +729,6 @@ export default function Home() {
           <section className="relative isolate overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 py-32">
             <Wave position="top" />
             <Wave position="bottom" />
-
             <div className="container mx-auto px-4 relative z-10">
               <motion.h2
                 className="text-4xl font-bold text-center mb-16 text-gray-900"
@@ -649,7 +739,6 @@ export default function Home() {
               >
                 Χαρακτηριστικά
               </motion.h2>
-
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {FEATURES.map((feature, index) => (
                   <FeatureCard key={index} {...feature} index={index} />
@@ -664,7 +753,6 @@ export default function Home() {
           <section className="relative isolate overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 py-32">
             <Wave position="top" />
             <Wave position="bottom" />
-
             <div className="container mx-auto px-4 relative z-10">
               <motion.h2
                 className="text-4xl font-bold text-center mb-16 text-gray-900"
@@ -682,7 +770,6 @@ export default function Home() {
                   className="inline-block align-middle"
                 />
               </motion.h2>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* With DontWait.gr */}
                 <div className="bg-white p-8 rounded-lg shadow-lg">
@@ -704,7 +791,6 @@ export default function Home() {
                     ))}
                   </ul>
                 </div>
-
                 {/* Without DontWait.gr */}
                 <div className="bg-white p-8 rounded-lg shadow-lg">
                   <h3 className="text-2xl font-bold mb-4 text-gray-600">
@@ -730,40 +816,89 @@ export default function Home() {
           </section>
         </Element>
 
-        {/* Pricing Plans Section */}
-        <Element name="Τιμολόγηση">
-          <section className="bg-white py-32">
-            <div className="container mx-auto px-4">
-              <motion.h2
-                className="text-4xl font-bold text-center mb-16 text-gray-900"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-              >
-                Πακέτα Τιμών
-              </motion.h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {PRICING_PLANS.map((plan, index) => (
-                  <PricingCard key={index} {...plan} />
-                ))}
+       {/* Pricing Plans Section */}
+<Element name="Τιμολόγηση">
+  <section className="bg-white py-32">
+    <div className="container mx-auto px-4">
+      <motion.h2
+        className="text-4xl font-bold text-center mb-16 text-gray-900"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true }}
+      >
+        Πακέτα Τιμών
+      </motion.h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {PRICING_PLANS.map((plan, index) => (
+          <div key={index} className="relative bg-white p-8 rounded-lg shadow-lg">
+            {plan.highlighted && (
+              <div className="absolute top-0 right-0 bg-blue-500 text-white px-2 py-1 text-xs font-bold uppercase rounded-bl-lg rounded-tr-lg">
+                Πιο Δημοφιλές
               </div>
-
-              {/* Button below the pricing cards to open the trial modal */}
-              <div className="mt-8 flex justify-center">
-                
+            )}
+            <div className="flex items-center mb-4">
+              <div className="p-2 rounded-full mr-4 bg-gray-100">
+                <plan.icon
+                  className={`w-8 h-8 ${plan.highlighted ? "text-blue-600" : "text-gray-600"}`}
+                />
               </div>
+              <h3 className={`text-2xl font-bold ${plan.highlighted ? "text-blue-600" : "text-gray-900"}`}>
+                {plan.name}
+              </h3>
             </div>
-          </section>
-        </Element>
+            <p className="text-3xl font-bold mb-6">{plan.price}</p>
+            <ul className="space-y-3 mb-8">
+              {plan.features.map((feature, i) => (
+                <li key={i} className="flex items-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-check text-green-500 mr-2"
+                  >
+                    <path d="M20 6 9 17l-5-5"></path>
+                  </svg>
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+            <Button
+              onClick={() => handlePlanSelection(plan.name)}
+              className={
+                plan.highlighted
+                  ? "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 w-full h-10 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white"
+                  : "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 w-full h-10 bg-gray-800 hover:bg-gray-900 text-white"
+              }
+            >
+              Επιλογή Πακέτου
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</Element>
+
+
+        {/* Plan Selection Modal */}
+        <PlanSelectionForm
+          isOpen={isPlanModalOpen}
+          onClose={() => setIsPlanModalOpen(false)}
+          selectedPlan={selectedPlan}
+        />
 
         {/* Testimonials Section */}
         <Element name="Μαρτυρίες">
           <section className="relative isolate bg-gradient-to-br from-white via-blue-50 to-blue-100 py-32">
             <Wave position="top" />
             <Wave position="bottom" />
-
             <div className="mx-auto max-w-6xl px-6 relative z-10">
               <motion.h2
                 className="text-4xl font-bold text-center text-gray-900 mb-4"
@@ -784,7 +919,6 @@ export default function Home() {
                 Πώς το <strong className="text-blue-600">DontWait.gr</strong>{" "}
                 βελτίωσε την εμπειρία κρατήσεων για επιχειρήσεις και πελάτες.
               </motion.p>
-
               <div className="space-y-8">
                 {TESTIMONIALS.map((testimonial, idx) => (
                   <motion.div
@@ -815,6 +949,13 @@ export default function Home() {
           </section>
         </Element>
 
+        {/* Emails List Section */}
+        <Element name="EmailsList">
+          <section className="py-32 bg-gray-100">
+            <EmailsList />
+          </section>
+        </Element>
+
         {/* Final CTA Section */}
         <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-32">
           <div className="container mx-auto px-4 text-center">
@@ -837,7 +978,7 @@ export default function Home() {
                   size="lg"
                   className="bg-white text-blue-600 hover:bg-blue-50 shadow-lg px-8 py-4 text-lg"
                 >
-                  Δωρεάν Δοκιμή 14 Ημερών
+                  Δωρεάν Δοκιμή 7 Ημερών
                 </Button>
                 <Button
                   size="lg"
@@ -858,7 +999,7 @@ export default function Home() {
       {/* Footer */}
       <Footer />
 
-      {/* Floating Button & Chat */}
+      {/* Floating Action Button & Chat Widget */}
       <FloatingActionButton />
       <ChatWidget />
     </div>

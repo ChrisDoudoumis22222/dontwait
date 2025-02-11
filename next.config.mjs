@@ -1,8 +1,14 @@
-let userConfig = undefined
+// next.config.mjs
+
+let userConfig;
 try {
-  userConfig = await import('./v0-user-next.config')
+  // Using dynamic import with top-level await (supported in ES modules)
+  userConfig = await import('./v0-user-next.config');
+  // If your imported module uses a default export, you might want to use:
+  // userConfig = (await import('./v0-user-next.config')).default;
 } catch (e) {
-  // ignore error
+  // Ignore the error if the file doesn't exist or fails to load
+  userConfig = null;
 }
 
 /** @type {import('next').NextConfig} */
@@ -21,28 +27,27 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
-}
+};
 
-mergeConfig(nextConfig, userConfig)
+mergeConfig(nextConfig, userConfig);
 
 function mergeConfig(nextConfig, userConfig) {
   if (!userConfig) {
-    return
+    return;
   }
-
   for (const key in userConfig) {
     if (
-      typeof nextConfig[key] === 'object' &&
+      typeof nextConfig[key] === "object" &&
       !Array.isArray(nextConfig[key])
     ) {
       nextConfig[key] = {
         ...nextConfig[key],
         ...userConfig[key],
-      }
+      };
     } else {
-      nextConfig[key] = userConfig[key]
+      nextConfig[key] = userConfig[key];
     }
   }
 }
 
-export default nextConfig
+export default nextConfig;
