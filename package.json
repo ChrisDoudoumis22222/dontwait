@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "node -e \"require('os').platform().includes('win') ? require('child_process').execSync('npm install @next/swc-win32-x64-msvc', {stdio: 'inherit'}) : require('child_process').execSync('npm install @next/swc-linux-x64-gnu', {stdio: 'inherit'})\""
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
