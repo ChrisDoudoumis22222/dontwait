@@ -10,7 +10,7 @@ import { Link as ScrollLink, Element } from "react-scroll";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
 import {
   Menu as MenuIcon,
@@ -37,6 +37,14 @@ import {
   Settings,
   MessageCircle,
 } from "lucide-react";
+
+// ------------------------------
+// Create Supabase Client
+// ------------------------------
+const supabaseUrl = "https://rdwwczdghdkqhhpmfneo.supabase.co";
+const supabaseKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkd3djemRnaGRrcWhocG1mbmVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNzIyODIsImV4cCI6MjA1NDg0ODI4Mn0.biWNt1s3eMyXEqfEywsDdPZamCyFLUUREYnaTAgJ6hk";
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // ------------------------------
 // Custom Components Imports
@@ -238,9 +246,27 @@ function TrialModal({ isOpen, onClose }: TrialModalProps) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Form Data Submitted:", formData);
+
+    // Insert the trial data into the "trial_requests" table in Supabase
+    try {
+      const { data, error } = await supabase.from("trial_requests").insert([
+        {
+          email: formData.email,
+          name: formData.name,
+          company_type: formData.companyType,
+          package: formData.package,
+        },
+      ]);
+      if (error) {
+        console.error("Error inserting trial request:", error);
+      } else {
+        console.log("Trial request submitted successfully:", data);
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+    }
     onClose();
   };
 
@@ -835,13 +861,6 @@ export default function Home() {
             </div>
           </section>
         </Element>
-
-        {/* Plan Selection Modal */}
-        <PlanSelectionForm
-          isOpen={isPlanModalOpen}
-          onClose={() => setIsPlanModalOpen(false)}
-          selectedPlan={selectedPlan}
-        />
 
         {/* Testimonials Section */}
         <Element name="Μαρτυρίες">

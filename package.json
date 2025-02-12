@@ -53,15 +53,16 @@
     "cmdk": "1.0.4",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "8.5.1",
+    "express": "^4.21.2",
     "framer-motion": "^12.4.2",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "my-v0-project": "file:",
-    "next": "^14.2.23",
+    "next": "^14.2.24",
     "next-themes": "^0.4.4",
-    "react": "^18",
+    "react": "^18.3.1",
     "react-day-picker": "8.10.1",
-    "react-dom": "^18",
+    "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.1",
     "react-intersection-observer": "latest",
     "react-resizable-panels": "^2.1.7",
@@ -84,5 +85,21 @@
     "typescript": "^5",
     "webpack": "^5.97.1",
     "webpack-cli": "^6.0.1"
-  }
+  },
+  "description": "\"# dontwait\"",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChrisDoudoumis22222/dontwait.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ChrisDoudoumis22222/dontwait/issues"
+  },
+  "homepage": "https://github.com/ChrisDoudoumis22222/dontwait#readme"
 }
